@@ -11,15 +11,16 @@ SELECT title, length FROM track
 	
 	
 SELECT name, release_date FROM mixtape
-	WHERE EXTRACT(YEAR FROM release_date) <= 2020 AND EXTRACT(YEAR FROM release_date) >= 2018;
+	WHERE EXTRACT(YEAR FROM release_date) BETWEEN 2018 AND 2020;
 
 
 SELECT stage_name FROM artist
-	WHERE ARRAY_LENGTH(REGEXP_SPLIT_TO_ARRAY(stage_name, '\s+'), 1) = 1;
+	WHERE stage_name NOT LIKE '% %';
 	
 
 SELECT title FROM track
 	WHERE title ILIKE '%my%'
+	
 	
 SELECT g.name, COUNT(a.stage_name) FROM genre AS g
 	LEFT JOIN artistgenre AS ag ON g.id = ag.genre_id
@@ -48,7 +49,6 @@ SELECT DISTINCT a.stage_name FROM artist AS a
 		LEFT JOIN album AS al ON aa.album_id = al.id
 		WHERE EXTRACT(YEAR FROM al.release_date) = 2020
 	)
-	GROUP BY a.stage_name
 	
 	
 SELECT DISTINCT m.name FROM mixtape AS m
@@ -87,18 +87,15 @@ SELECT a.stage_name, t.length FROM artist AS a
 	
 
 SELECT DISTINCT a.title, COUNT(t.title) FROM album AS a
-	LEFT JOIN track AS t ON a.id = t.album_id 
-	WHERE t.album_id IN (
-		SELECT album_id FROM track
-		GROUP BY album_id
-		HAVING COUNT(id) = (
-			SELECT count(id) FROM track 
-            GROUP BY album_id
-			ORDER BY count
-			LIMIT 1
-		)
-	)
+	JOIN track AS t ON a.id = t.album_id 
 	GROUP BY a.title
+	HAVING COUNT(t.title) = (
+		SELECT COUNT(t.title) FROM album AS a
+		JOIN track AS t ON a.id = t.album_id 
+		GROUP BY a.title 
+		ORDER BY count(t.title)
+		LIMIT 1);
+	)
 	
 	
 	
